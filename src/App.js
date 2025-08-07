@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { SammyAgentProvider as SammyAgentProviderV2, useSammyAgentContext } from '@sammy-labs/sammy-three';
+import { SammyAgentProvider } from '@sammy-labs/sammy-three';
 import logo from './logo.svg';
 import './App.css';
 import SammyButton from './SammyButton';
@@ -101,9 +101,9 @@ function App() {
   );
 
   return config ? (
-    <SammyAgentProviderV2 config={config}>
+    <SammyAgentProvider config={config}>
       {appContent}
-    </SammyAgentProviderV2>
+    </SammyAgentProvider>
   ) : appContent;
 }
 
