@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSammyAgentContext } from '@sammy-labs/sammy-three';
+import { useSammyAgentContext, AgentMode } from '@sammy-labs/sammy-three';
 import './SammyButton.css';
 
 const SammyButton = ({ onToggle, isActive = false }) => {
@@ -15,8 +15,22 @@ const SammyButton = ({ onToggle, isActive = false }) => {
         stopAgent();
         console.log('Sammy agent stopped');
       } else {
-        await startAgent({});
-        console.log('Sammy agent started');
+        // Get guide ID from environment variable if available
+        const guideId = process.env.REACT_APP_GUIDE_ID || null;
+        
+        // Prepare start options
+        const startOptions = {
+          agentMode: AgentMode.USER, // Default to USER mode
+        };
+        
+        // Add guide ID if available
+        if (guideId) {
+          startOptions.guideId = guideId;
+          console.log('Starting Sammy agent with guide:', guideId);
+        }
+        
+        await startAgent(startOptions);
+        console.log('Sammy agent started', startOptions);
       }
       if (onToggle) {
         onToggle(!isAgentActive);

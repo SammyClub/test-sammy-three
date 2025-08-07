@@ -15,6 +15,13 @@ export const createSammyProviderConfig = ({
     enabled: false,
   };
 
+  // Determine the correct API URL
+  // Note: The Sammy SDK expects the base URL without /validate endpoint
+  const apiUrl = process.env.REACT_APP_SAMMY_API_URL || 'https://app.sammylabs.com';
+  
+  console.log('[SammyConfig] Using API URL:', apiUrl);
+  console.log('[SammyConfig] JWT Token present:', !!jwtToken);
+
   return {
     // Screen capture configuration
     screenCaptureCallbacks: {
@@ -27,18 +34,25 @@ export const createSammyProviderConfig = ({
     },
 
     // Basic configuration
-    debugLogs: process.env.NODE_ENV === 'development',
+    debugLogs: process.env.NODE_ENV === 'development' || process.env.REACT_APP_DEBUG_LOGS === 'true',
     captureMethod,
     model: 'models/gemini-live-2.5-flash-preview',
 
     // Authentication
     auth: {
       token: jwtToken,
-      baseUrl: 'http://localhost:8000',
+      baseUrl: apiUrl,
       onTokenExpired,
     },
 
     // Observability - all API calls handled automatically by worker
     observability: observabilityConfig,
+    
+    // CORS configuration for development
+    // Note: This might not be used by the SDK but included for completeness
+    cors: {
+      credentials: 'include',
+      mode: 'cors',
+    },
   };
 };

@@ -2,9 +2,10 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://app.sammylabs.com",
   "dependencies": {
     "@picovoice/koala-web": "^2.0.0",
-    "@sammy-labs/sammy-three": "^0.0.22",
+    "@sammy-labs/sammy-three": "^0.0.25",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^13.4.0",

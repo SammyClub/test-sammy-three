@@ -101,7 +101,13 @@ function App() {
   );
 
   return config ? (
-    <SammyAgentProvider config={config}>
+    <SammyAgentProvider
+      guides={true} // Enable guides functionality
+      guidesDebug={true} // Debug logging for guides
+      guidesQueryParam="walkthrough" // Query param name for URL-based walkthroughs
+      autoStartFromURL={true} // Auto-start walkthroughs from URL parameters
+      config={config}
+    >
       {appContent}
     </SammyAgentProvider>
   ) : appContent;
