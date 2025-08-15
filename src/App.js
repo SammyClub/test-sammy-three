@@ -5,11 +5,14 @@ import './App.css';
 import SammyButton from './SammyButton';
 import SammyStatus from './SammyStatus';
 import { createSammyProviderConfig } from './sammyConfig';
+import { SammyGuideBubble } from './SammyGuideBubble';
+import { MicrophonePermissionManager } from './MicrophonePermissionManager';
 
 function App() {
   const [sammyActive, setSammyActive] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [permissionError, setPermissionError] = useState(null);
+  const [showMicrophonePermission, setShowMicrophonePermission] = useState(false);
   
   // Get JWT token from environment variable
   const jwtToken = process.env.REACT_APP_JWT_TOKEN;
@@ -21,11 +24,22 @@ function App() {
     setSammyActive(false);
   }, []);
   
-  // Create Sammy configuration only if JWT token is available
+  // Handle microphone permission required callback
+  const handleMicrophonePermissionRequired = useCallback(() => {
+    setShowMicrophonePermission(true);
+  }, []);
+  
+  // Create Sammy configuration with upgraded features
   const config = jwtToken ? createSammyProviderConfig({
     jwtToken,
     onTokenExpired: handleTokenExpired,
-    captureMethod: 'render'
+    captureMethod: 'render',
+    
+    // New Sammy 3 features
+    enableObservability: process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true',
+    debugAudioPerformance: process.env.REACT_APP_DEBUG_AUDIO === 'true',
+    enableMCP: process.env.REACT_APP_ENABLE_MCP === 'true',
+    captureQuality: parseFloat(process.env.REACT_APP_CAPTURE_QUALITY) || 0.9,
   }) : null;
   
   // Request permissions for audio and screen capture
@@ -86,6 +100,25 @@ function App() {
             ⚠️ {permissionError}
           </p>
         )}
+        {jwtToken && process.env.NODE_ENV === 'development' && (
+          <div style={{ 
+            marginTop: '20px', 
+            padding: '10px', 
+            backgroundColor: 'rgba(0,0,0,0.2)', 
+            borderRadius: '8px',
+            fontSize: '12px',
+            textAlign: 'left',
+            maxWidth: '500px'
+          }}>
+            <strong>Sammy 3 Configuration:</strong>
+            <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
+              <li>Observability: {process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true' ? '✅' : '❌'}</li>
+              <li>MCP Protocol: {process.env.REACT_APP_ENABLE_MCP === 'true' ? '✅' : '❌'}</li>
+              <li>Audio Debug: {process.env.REACT_APP_DEBUG_AUDIO === 'true' ? '✅' : '❌'}</li>
+              <li>Capture Method: render</li>
+            </ul>
+          </div>
+        )}
       </header>
       
       {jwtToken && (
@@ -105,10 +138,16 @@ function App() {
       guides={true} // Enable guides functionality
       guidesDebug={true} // Debug logging for guides
       guidesQueryParam="walkthrough" // Query param name for URL-based walkthroughs
-      autoStartFromURL={true} // Auto-start walkthroughs from URL parameters
+      autoStartFromURL={false} // Don't auto-start, just show bubble
       config={config}
+      onMicrophonePermissionRequired={handleMicrophonePermissionRequired}
     >
       {appContent}
+      <SammyGuideBubble />
+      <MicrophonePermissionManager
+        onOpenChange={setShowMicrophonePermission}
+        open={showMicrophonePermission}
+      />
     </SammyAgentProvider>
   ) : appContent;
 }

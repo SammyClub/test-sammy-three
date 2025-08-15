@@ -4,39 +4,86 @@ const shouldUseWorkerMode = () => {
   return process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_WORKER_MODE === 'true';
 };
 
+/**
+ * Creates configuration for the upgraded Sammy 3 Agent Provider
+ * Supports new features: MCP, enhanced observability, capture config, and debug options
+ */
 export const createSammyProviderConfig = ({
   jwtToken,
   onTokenExpired,
-  captureMethod,
+  captureMethod = 'render', // Default to 'render' for better compatibility
   enableWorkerMode = shouldUseWorkerMode(),
   enableAudioAggregation = true,
+  // New configuration options
+  enableMCP = false,
+  mcpServers = [],
+  enableObservability = false,
+  debugAudioPerformance = false,
+  frameRate = 30,
+  captureQuality = 0.9,
+  defaultVoice = 'alloy',
 }) => {
-  const observabilityConfig = {
-    enabled: false,
-  };
-
   // Determine the correct API URL
-  // Note: The Sammy SDK expects the base URL without /validate endpoint
   const apiUrl = process.env.REACT_APP_SAMMY_API_URL || 'https://app.sammylabs.com';
   
   console.log('[SammyConfig] Using API URL:', apiUrl);
   console.log('[SammyConfig] JWT Token present:', !!jwtToken);
+  console.log('[SammyConfig] MCP enabled:', enableMCP);
+  console.log('[SammyConfig] Observability enabled:', enableObservability);
+
+  // Build observability configuration
+  const observabilityConfig = {
+    enabled: enableObservability || process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true',
+    audioAggregation: enableAudioAggregation,
+    callback: (event) => {
+      // Custom observability event handler
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Observability Event]', event);
+      }
+    },
+  };
+
+  // Build MCP (Model Context Protocol) configuration
+  const mcpConfig = enableMCP ? {
+    enabled: true,
+    debug: process.env.NODE_ENV === 'development',
+    servers: mcpServers.length > 0 ? mcpServers : [
+      // Default MCP server configuration (example)
+      {
+        name: 'filesystem',
+        type: 'stdio',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
+      },
+    ],
+  } : undefined;
+
+  // Build capture configuration with quality settings
+  const captureConfig = {
+    quality: captureQuality || parseFloat(process.env.REACT_APP_CAPTURE_QUALITY) || 0.9,
+  };
 
   return {
-    // Screen capture configuration
+    // Screen capture callbacks
     screenCaptureCallbacks: {
       startStreaming: async () => {
-        console.log('[ScreenCapture] Starting screen capture');
+        console.log('[ScreenCapture] Starting screen capture with config:', captureConfig);
       },
       stopStreaming: async () => {
         console.log('[ScreenCapture] Stopping screen capture');
       },
     },
 
-    // Basic configuration
+    // Core configuration
     debugLogs: process.env.NODE_ENV === 'development' || process.env.REACT_APP_DEBUG_LOGS === 'true',
+    debugAudioPerformance: debugAudioPerformance || process.env.REACT_APP_DEBUG_AUDIO === 'true',
+    
+    // Voice configuration
+    defaultVoice: defaultVoice || process.env.REACT_APP_DEFAULT_VOICE || 'alloy',
+
+    // Capture configuration
     captureMethod,
-    model: 'models/gemini-live-2.5-flash-preview',
+    captureConfig,
 
     // Authentication
     auth: {
@@ -45,14 +92,10 @@ export const createSammyProviderConfig = ({
       onTokenExpired,
     },
 
-    // Observability - all API calls handled automatically by worker
+    // MCP (Model Context Protocol) configuration
+    mcp: mcpConfig,
+
+    // Observability configuration
     observability: observabilityConfig,
-    
-    // CORS configuration for development
-    // Note: This might not be used by the SDK but included for completeness
-    cors: {
-      credentials: 'include',
-      mode: 'cors',
-    },
   };
 };
