@@ -9,7 +9,6 @@ const SammyStatus = () => {
     error,
     agentVolume,
     userVolume,
-    muted,
     screenCapture
   } = useSammyAgentContext();
   
@@ -62,6 +61,11 @@ const SammyStatus = () => {
             <div className="status-row">
               <span>Streaming:</span>
               <span>{isStreaming ? '✅ Yes' : '❌ No'}</span>
+            </div>
+            
+            <div className="status-row">
+              <span>Observability:</span>
+              <span>✅ Enabled</span>
             </div>
             
             {agentVolume !== undefined && (

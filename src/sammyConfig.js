@@ -17,7 +17,7 @@ export const createSammyProviderConfig = ({
   // New configuration options
   enableMCP = false,
   mcpServers = [],
-  enableObservability = false,
+  enableObservability = true, // Enable observability by default
   debugAudioPerformance = false,
   frameRate = 30,
   captureQuality = 0.9,
@@ -29,18 +29,44 @@ export const createSammyProviderConfig = ({
   console.log('[SammyConfig] Using API URL:', apiUrl);
   console.log('[SammyConfig] JWT Token present:', !!jwtToken);
   console.log('[SammyConfig] MCP enabled:', enableMCP);
-  console.log('[SammyConfig] Observability enabled:', enableObservability);
+  console.log('[SammyConfig] Observability enabled:', enableObservability || process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true');
+  console.log('[SammyConfig] Worker mode enabled:', enableWorkerMode);
+  console.log('[SammyConfig] Audio aggregation enabled:', enableAudioAggregation);
 
-  // Build observability configuration
+  // Build comprehensive observability configuration with your specified defaults
   const observabilityConfig = {
+    // Core settings - enabled by default
     enabled: enableObservability || process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true',
-    audioAggregation: enableAudioAggregation,
-    callback: (event) => {
-      // Custom observability event handler
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Observability Event]', event);
-      }
+    logToConsole: true,              // Console logging enabled by default
+    
+    // Privacy settings - include all data by default
+    includeSystemPrompt: true,       // Include system prompts
+    includeAudioData: true,          // Include raw audio data
+    includeImageData: true,          // Include image data
+    
+    // Worker mode configuration for performance - enabled by default
+    useWorker: true,
+    workerConfig: {
+      batchSize: 50,                 // 50 events per batch
+      batchIntervalMs: 5000,         // 5 seconds between batches
     },
+    
+    // Filter noisy events to reduce log spam
+    disableEventTypes: [
+      'audio.send',
+      'audio.receive',
+      // Uncomment to filter more events:
+      // 'transcription.input',
+      // 'transcription.output',
+    ],
+    
+    // Metadata for all events
+    metadata: {
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString(),
+      version: process.env.REACT_APP_VERSION || '1.0.0',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+    }
   };
 
   // Build MCP (Model Context Protocol) configuration

@@ -35,8 +35,8 @@ function App() {
     onTokenExpired: handleTokenExpired,
     captureMethod: 'render',
     
-    // New Sammy 3 features
-    enableObservability: process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true',
+    // New Sammy 3 features - observability enabled by default
+    enableObservability: process.env.REACT_APP_ENABLE_OBSERVABILITY !== 'false', // Default to true unless explicitly disabled
     debugAudioPerformance: process.env.REACT_APP_DEBUG_AUDIO === 'true',
     enableMCP: process.env.REACT_APP_ENABLE_MCP === 'true',
     captureQuality: parseFloat(process.env.REACT_APP_CAPTURE_QUALITY) || 0.9,
@@ -112,9 +112,10 @@ function App() {
           }}>
             <strong>Sammy 3 Configuration:</strong>
             <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
-              <li>Observability: {process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true' ? '✅' : '❌'}</li>
+              <li>Observability: {process.env.REACT_APP_ENABLE_OBSERVABILITY !== 'false' ? '✅ Enabled (default)' : '❌ Disabled'}</li>
               <li>MCP Protocol: {process.env.REACT_APP_ENABLE_MCP === 'true' ? '✅' : '❌'}</li>
               <li>Audio Debug: {process.env.REACT_APP_DEBUG_AUDIO === 'true' ? '✅' : '❌'}</li>
+              <li>Worker Mode: {process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_WORKER_MODE === 'true' ? '✅' : '❌'}</li>
               <li>Capture Method: render</li>
             </ul>
           </div>
