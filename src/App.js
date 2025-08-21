@@ -5,14 +5,12 @@ import './App.css';
 import SammyButton from './SammyButton';
 import SammyStatus from './SammyStatus';
 import { createSammyProviderConfig } from './sammyConfig';
-import { SammyGuideBubble } from './SammyGuideBubble';
-import { MicrophonePermissionManager } from './MicrophonePermissionManager';
+import { SammyStartWalkthroughModal } from './SammyStartWalkthroughModal';
 
 function App() {
   const [sammyActive, setSammyActive] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [permissionError, setPermissionError] = useState(null);
-  const [showMicrophonePermission, setShowMicrophonePermission] = useState(false);
   
   // Get JWT token from environment variable
   const jwtToken = process.env.REACT_APP_JWT_TOKEN;
@@ -22,11 +20,6 @@ function App() {
     console.log('JWT token expired, need to refresh');
     // In a real app, you would refresh the token here
     setSammyActive(false);
-  }, []);
-  
-  // Handle microphone permission required callback
-  const handleMicrophonePermissionRequired = useCallback(() => {
-    setShowMicrophonePermission(true);
   }, []);
   
   // Create Sammy configuration with upgraded features
@@ -139,16 +132,11 @@ function App() {
       guides={true} // Enable guides functionality
       guidesDebug={true} // Debug logging for guides
       guidesQueryParam="walkthrough" // Query param name for URL-based walkthroughs
-      autoStartFromURL={false} // Don't auto-start, just show bubble
+      autoStartFromURL={false} // Don't auto-start, just show modal
       config={config}
-      onMicrophonePermissionRequired={handleMicrophonePermissionRequired}
     >
       {appContent}
-      <SammyGuideBubble />
-      <MicrophonePermissionManager
-        onOpenChange={setShowMicrophonePermission}
-        open={showMicrophonePermission}
-      />
+      <SammyStartWalkthroughModal />
     </SammyAgentProvider>
   ) : appContent;
 }

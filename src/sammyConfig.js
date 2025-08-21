@@ -1,127 +1,105 @@
+/**
+ * Sammy Provider Configuration
+ * Configuration factory for SammyAgentProvider with worker-based observability and audio aggregation
+ * Aligned with working implementation from production
+ */
+
 // Helper function to determine if worker mode should be used
 const shouldUseWorkerMode = () => {
-  // Enable worker mode in production or when explicitly set
-  return process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_WORKER_MODE === 'true';
+  // Use worker mode by default, can be disabled via environment variable
+  return process.env.REACT_APP_DISABLE_WORKER_MODE !== 'true';
 };
 
-/**
- * Creates configuration for the upgraded Sammy 3 Agent Provider
- * Supports new features: MCP, enhanced observability, capture config, and debug options
- */
 export const createSammyProviderConfig = ({
   jwtToken,
   onTokenExpired,
-  captureMethod = 'render', // Default to 'render' for better compatibility
+  captureMethod = 'render',
   enableWorkerMode = shouldUseWorkerMode(),
   enableAudioAggregation = true,
-  // New configuration options
-  enableMCP = false,
-  mcpServers = [],
-  enableObservability = true, // Enable observability by default
-  debugAudioPerformance = false,
-  frameRate = 30,
-  captureQuality = 0.9,
-  defaultVoice = 'alloy',
+  languageCode = 'en-US',
 }) => {
-  // Determine the correct API URL
-  const apiUrl = process.env.REACT_APP_SAMMY_API_URL || 'https://app.sammylabs.com';
-  
-  console.log('[SammyConfig] Using API URL:', apiUrl);
-  console.log('[SammyConfig] JWT Token present:', !!jwtToken);
-  console.log('[SammyConfig] MCP enabled:', enableMCP);
-  console.log('[SammyConfig] Observability enabled:', enableObservability || process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true');
-  console.log('[SammyConfig] Worker mode enabled:', enableWorkerMode);
-  console.log('[SammyConfig] Audio aggregation enabled:', enableAudioAggregation);
-
-  // Build comprehensive observability configuration with your specified defaults
   const observabilityConfig = {
-    // Core settings - enabled by default
-    enabled: enableObservability || process.env.REACT_APP_ENABLE_OBSERVABILITY === 'true',
-    logToConsole: true,              // Console logging enabled by default
-    
-    // Privacy settings - include all data by default
-    includeSystemPrompt: true,       // Include system prompts
-    includeAudioData: true,          // Include raw audio data
-    includeImageData: true,          // Include image data
-    
-    // Worker mode configuration for performance - enabled by default
-    useWorker: true,
-    workerConfig: {
-      batchSize: 50,                 // 50 events per batch
-      batchIntervalMs: 5000,         // 5 seconds between batches
-    },
-    
-    // Filter noisy events to reduce log spam
+    enabled: true,
+    logToConsole: process.env.NODE_ENV === 'development',
+    includeSystemPrompt: true,
+    includeAudioData: false,
+    includeImageData: true,
+
+    // Worker mode configuration - handles all API calls automatically
+    useWorker: enableWorkerMode,
+    workerConfig: enableWorkerMode
+      ? {
+          batchSize: 50,
+          batchIntervalMs: 5000, // 5 seconds - worker handles retries automatically
+        }
+      : undefined,
+
+    // Filter out noisy events to reduce log spam
     disableEventTypes: [
       'audio.send',
       'audio.receive',
-      // Uncomment to filter more events:
+      // Optionally filter other noisy events:
       // 'transcription.input',
       // 'transcription.output',
     ],
-    
-    // Metadata for all events
+
+    // Metadata for context
     metadata: {
       environment: process.env.NODE_ENV || 'development',
       timestamp: new Date().toISOString(),
       version: process.env.REACT_APP_VERSION || '1.0.0',
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
-    }
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+    },
+
+    // Audio aggregation configuration - worker handles all API calls automatically
+    audioAggregation: enableAudioAggregation
+      ? {
+          flushIntervalMs: 30000, // 30 seconds
+          // No onFlush callback needed - worker handles API calls automatically
+        }
+      : undefined,
+
+    // No custom callback needed - worker handles all trace events automatically
   };
 
-  // Build MCP (Model Context Protocol) configuration
-  const mcpConfig = enableMCP ? {
-    enabled: true,
-    debug: process.env.NODE_ENV === 'development',
-    servers: mcpServers.length > 0 ? mcpServers : [
-      // Default MCP server configuration (example)
-      {
-        name: 'filesystem',
-        type: 'stdio',
-        command: 'npx',
-        args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
-      },
-    ],
-  } : undefined;
-
-  // Build capture configuration with quality settings
-  const captureConfig = {
-    quality: captureQuality || parseFloat(process.env.REACT_APP_CAPTURE_QUALITY) || 0.9,
-  };
+  // Log the language code for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[SammyProvider] Configuring with language: ${languageCode}`);
+    console.log('[SammyProvider] JWT Token present:', !!jwtToken);
+    console.log('[SammyProvider] Worker mode enabled:', enableWorkerMode);
+  }
 
   return {
-    // Screen capture callbacks
+    // Screen capture configuration
     screenCaptureCallbacks: {
       startStreaming: async () => {
-        console.log('[ScreenCapture] Starting screen capture with config:', captureConfig);
+        console.log('[ScreenCapture] Starting screen capture');
       },
       stopStreaming: async () => {
         console.log('[ScreenCapture] Stopping screen capture');
       },
     },
 
-    // Core configuration
-    debugLogs: process.env.NODE_ENV === 'development' || process.env.REACT_APP_DEBUG_LOGS === 'true',
-    debugAudioPerformance: debugAudioPerformance || process.env.REACT_APP_DEBUG_AUDIO === 'true',
-    
-    // Voice configuration
-    defaultVoice: defaultVoice || process.env.REACT_APP_DEFAULT_VOICE || 'alloy',
-
-    // Capture configuration
+    // Basic configuration
+    debugLogs: process.env.NODE_ENV === 'development',
     captureMethod,
-    captureConfig,
+    model: 'models/gemini-live-2.5-flash-preview',
 
-    // Authentication
+    // Authentication - CRITICAL: Use correct API URL
     auth: {
       token: jwtToken,
-      baseUrl: apiUrl,
+      baseUrl:
+        process.env.REACT_APP_SAMMY_API_BASE_URL ||
+        'https://api-dev.sammylabs.com', // Changed from app.sammylabs.com to api.sammylabs.com
       onTokenExpired,
     },
 
-    // MCP (Model Context Protocol) configuration
-    mcp: mcpConfig,
-
-    // Observability configuration
+    // Observability - all API calls handled automatically by worker
     observability: observabilityConfig,
+
+    // Language configuration - the backend confirms this works at runtime
+    // even though TypeScript types don't include it yet
+    language: { code: languageCode },
   };
 };
