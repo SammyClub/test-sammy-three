@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@picovoice/koala-web": "^2.0.0",
-    "@sammy-labs/sammy-three": "^0.1.23",
+    "@sammy-labs/sammy-three": "^0.1.29",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^13.4.0",

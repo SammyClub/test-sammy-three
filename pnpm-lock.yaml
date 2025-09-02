@@ -16,8 +16,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@sammy-labs/sammy-three':
-        specifier: ^0.1.23
-        version: 0.1.23(@picovoice/koala-web@2.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.1.29
+        version: 0.1.30(@picovoice/koala-web@2.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -1101,8 +1101,8 @@ packages:
   '@rushstack/eslint-patch@1.12.0':
     resolution: {integrity: sha512-5EwMtOqvJMMa3HbmxLlF74e+3/HhwBTMcvt3nqVJgGCozO6hzIPOBlwm8mGVNR9SN2IJpxSnlxczyDjcn7qIyw==}
 
-  '@sammy-labs/sammy-three@0.1.23':
-    resolution: {integrity: sha512-xpS+eT80aIzQUrlUCxHLcS8NFXQj55LxXRvQ75srW+Mm8YoQDPI6KJk73no5Mo6oESUET+XfzvbZm1ZwU2MyLw==}
+  '@sammy-labs/sammy-three@0.1.30':
+    resolution: {integrity: sha512-PdgwP0SISEnmEXkWLisRCc3u9fVPfIIV695yrKIhic6u0hwsiCw5V6fBqaVqL4rMH3cjOPC+n+SfW9PHUeikAQ==}
     engines: {node: '>=14'}
     peerDependencies:
       '@picovoice/koala-web': ^2.0.0
@@ -7132,7 +7132,7 @@ snapshots:
 
   '@rushstack/eslint-patch@1.12.0': {}
 
-  '@sammy-labs/sammy-three@0.1.23(@picovoice/koala-web@2.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@sammy-labs/sammy-three@0.1.30(@picovoice/koala-web@2.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@google/genai': 1.14.0(@modelcontextprotocol/sdk@1.17.3)
       '@modelcontextprotocol/sdk': 1.17.3
